@@ -1,4 +1,4 @@
-part=00031302
+part=00000323
 akaMfr=FP1508
 akaMfrInfo=9591546|FP1508|||Invalid Aquistion, ? to search||33739,P||||
 akaMfrInfo=37182700|FP1508||E|Seco Tools Inc.||33739,P|1081002|9999999|WAR006JY|1130528,09:02:15

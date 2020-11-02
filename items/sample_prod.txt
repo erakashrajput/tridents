@@ -1,5 +1,4 @@
-00000067\t "recordType":"Item"\t"recordSpec":"i_00000067","refNum":"1645626","as400Desc":"F/ RUBBER PROTECT BOOT","productGroup":"145","productGroupDesc":"Database SKUs","partSV":"00000067|0000006|67"
-"recordType":"Item",
+recordType:Item
 recordSpec=i_00000067
 refNum=1645626
 as400Desc=F/ RUBBER PROTECT BOOT

@@ -1,4 +1,4 @@
-recordType:Item,
+recordType=Item
 recordSpec=i_00000067
 refNum=1645626
 as400Desc=F/ RUBBER PROTECT BOOT

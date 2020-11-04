@@ -84,8 +84,8 @@ def aggregated_line_files(files_array, line_file_name):
     sort_file(line_file_name)
 
 def main():
-    # aggregated_line_files(SOURCE_FILES_ATTRIBUTE,"attribute.txt")
-    # aggregated_line_files(SOURCE_FILES_PRODUCT,"prod.txt")
+    aggregated_line_files(SOURCE_FILES_ATTRIBUTE,"attribute.txt")
+    aggregated_line_files(SOURCE_FILES_PRODUCT,"prod.txt")
     merge_master_line()
     pass
     

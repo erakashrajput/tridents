@@ -1,0 +1,48 @@
+python3 test_file.py
+file started: Tue Nov  3 01:48:01 2020	IT_Alternate.TXT
+completed: /Users/akash.rajput/Downloads/CUSTOMERS/automated/mscdirect/items/IT_Alternate.TXT
+Read Duration:14.844727993011475
+
+file started: Tue Nov  3 01:48:16 2020	IT_Alternate1.TXT
+completed: /Users/akash.rajput/Downloads/CUSTOMERS/automated/mscdirect/items/IT_Alternate1.TXT
+Read Duration:15.163930177688599
+
+file started: Tue Nov  3 01:48:31 2020	IT_Alternate2.TXT
+completed: /Users/akash.rajput/Downloads/CUSTOMERS/automated/mscdirect/items/IT_Alternate2.TXT
+Read Duration:15.190783977508545
+
+file started: Tue Nov  3 01:48:46 2020	IT_Alternate3.TXT
+completed: /Users/akash.rajput/Downloads/CUSTOMERS/automated/mscdirect/items/IT_Alternate3.TXT
+Read Duration:15.106162786483765
+
+file started: Tue Nov  3 01:49:01 2020	IT_Alternate4.TXT
+completed: /Users/akash.rajput/Downloads/CUSTOMERS/automated/mscdirect/items/IT_Alternate4.TXT
+Read Duration:13.118695974349976
+
+sort /Users/akash.rajput/Downloads/CUSTOMERS/automated/mscdirect/output/attribute.txt -o /Users/akash.rajput/Downloads/CUSTOMERS/automated/mscdirect/output/attribute.txt
+file started: Tue Nov  3 01:49:55 2020	IT_Product1.TXT
+completed: /Users/akash.rajput/Downloads/CUSTOMERS/automated/mscdirect/items/IT_Product1.TXT
+Read Duration:104.1598219871521
+
+file started: Tue Nov  3 01:51:39 2020	IT_Product2.TXT
+completed: /Users/akash.rajput/Downloads/CUSTOMERS/automated/mscdirect/items/IT_Product2.TXT
+Read Duration:104.59628629684448
+
+file started: Tue Nov  3 01:53:24 2020	IT_Product3.TXT
+completed: /Users/akash.rajput/Downloads/CUSTOMERS/automated/mscdirect/items/IT_Product3.TXT
+Read Duration:105.41429471969604
+
+file started: Tue Nov  3 01:55:09 2020	IT_Product4.TXT
+completed: /Users/akash.rajput/Downloads/CUSTOMERS/automated/mscdirect/items/IT_Product4.TXT
+Read Duration:106.23544502258301
+
+file started: Tue Nov  3 01:56:55 2020	IT_Product5.TXT
+completed: /Users/akash.rajput/Downloads/CUSTOMERS/automated/mscdirect/items/IT_Product5.TXT
+Read Duration:109.16677212715149
+
+file started: Tue Nov  3 01:58:45 2020	IT_Product6.TXT
+completed: /Users/akash.rajput/Downloads/CUSTOMERS/automated/mscdirect/items/IT_Product6.TXT
+Read Duration:129.6998598575592
+
+sort /Users/akash.rajput/Downloads/CUSTOMERS/automated/mscdirect/output/prod.txt -o /Users/akash.rajput/Downloads/CUSTOMERS/automated/mscdirect/output/prod.txt
+Time Event:2274.7281749248505

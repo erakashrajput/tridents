@@ -1,7 +1,7 @@
 recordType:Item
 recordSpec=i_00000067
 refNum=1645626
-as400Desc=F/ RUBBER PROTECT BOOT
+as400Desc=F/ "RUBBER PROTECT BOOT
 productGroup=145
 productGroupDesc=Database SKUs
 part=00000067

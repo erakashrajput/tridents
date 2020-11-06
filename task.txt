@@ -1,5 +1,0 @@
-1. write rule for Restriction + Live to create single files
-2. make a join on all 4 one by one
-3. create a json validator
-
-Plan using DB

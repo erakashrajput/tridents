@@ -46,9 +46,11 @@ def record_creator(file_,output_file):
                         PART_ID_ARR.append(prod_key)
                     else:
                         if record_row_key in entry_dict:
-                            "|" + record_row_value
+                            entry_dict[record_row_key] = entry_dict[record_row_key]+"|" + record_row_value
                         #    logging.debug("Duplicate {} -> Value:{}".format(record_row_key,entry_dict[record_row_key]))
                         else:
+                            # CHECK FOR THE RF VALUES
+
                             entry_dict[record_row_key] = record_row_value
 
             except:
@@ -98,7 +100,7 @@ def aggregated_line_files(files_array, line_file_name):
 
             for file_ in files_array:
                 print("File started:{}\t{}".format(time.ctime(),file_))
-                
+
                 file_ = WORKING_DIR+"/items/"+file_   
                 record_creator(file_,output_file)
 

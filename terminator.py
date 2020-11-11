@@ -5,7 +5,6 @@ import json
 import re
 
 LOG_FILENAME = 'stats.log'
-WORKING_DIR = os.getcwd()
 
 logging.basicConfig(filename=LOG_FILENAME, level=logging.ERROR)
 
@@ -100,12 +99,12 @@ def record_creator(file_, output_file):
                             continue
 
                         if re.search("^rf[0-9]+_N", record_row_key) != None:
-                            print(record_row_key)
+                        
                             rf_string+=record_row_value+":"
                             continue
                            
                         elif re.search("^rf[0-9]+_V", record_row_key) != None:
-                            print(record_row_key)
+                           
                             rf_string+=record_row_value+","
                             continue
                           
@@ -141,7 +140,7 @@ def record_creator(file_, output_file):
 def key_value_item_files(file_name, separator, seconday_key):
 
     record_file_dict = dict()
-    with open(WORKING_DIR+"/items/"+file_name, "r") as input_file_item:
+    with open("./items/"+file_name, "r") as input_file_item:
 
         for line in input_file_item:
             key, val = line.split(separator)
@@ -152,41 +151,41 @@ def key_value_item_files(file_name, separator, seconday_key):
             else:
                 record_file_dict[key] = record_file_dict[key]+"|"+val
 
-    with open(WORKING_DIR+"/output/"+file_name, "w") as output_file_item:
+    with open(file_name, "w") as output_file_item:
         for key, val in record_file_dict.items():
 
             if key == "ItemNumber" or key == "part":
                 continue    # HEADING SECTION
             out_string = key + "\t{\""+seconday_key+"\": \"" + val + "\"}\n"
             output_file_item.write(out_string)
-    sort_file(file_name)
+    # sort_file(file_name)
     return
 
 # SORT THE FILES
 
 
 def sort_file(line_file_name):
-    sort_string = "sort "+WORKING_DIR+"/output/"+line_file_name + \
-        " -o "+WORKING_DIR+"/output/"+line_file_name
+    sort_string = "sort "+line_file_name + \
+        " -o "+line_file_name
     os.system(sort_string)
 
 
 def aggregated_line_files(files_array, line_file_name):
 
-    with open(WORKING_DIR+"/output/" + line_file_name, "w") as output_file:
+    with open(line_file_name, "w") as output_file:
 
         for file_ in files_array:
             print("File started:{}\t{}".format(time.ctime(), file_))
 
-            file_ = WORKING_DIR+"/items/"+file_
+            file_ = "./items/"+file_
             record_creator(file_, output_file)
 
-    sort_file(line_file_name)
+    # sort_file(line_file_name)
 
 
 def final_merge():
     print("Merge and Sort Started in at {}".format(time.ctime()))
-    os.chdir(WORKING_DIR+"/output/")
+    # os.chdir(WORKING_DIR+"/output/")
     # os.system(
         # "cat prod.txt attribute.txt LiveCad4Build.txt ItemRestrictions.txt| sort > merge_line.txt")
     os.system("sort prod.txt attribute.txt LiveCad4Build.txt ItemRestrictions.txt > merge_line.txt")
@@ -197,10 +196,10 @@ def final_merge():
 def post_merge():
     print("Final Record Creation started {}\n".format(time.ctime()))
 
-    os.chdir(WORKING_DIR+"/output/")
-    final_outputfile = open("merge_line_unique.json", "w")
-    final_outputfile_jsonline = open("NX_MSCDIRECT_PROD_20201110.jsonl", "w")
-    final_outputfile.write("[\n")
+    # os.chdir(WORKING_DIR+"/output/")
+    # final_outputfile = open("merge_line_unique.json", "w")
+    final_outputfile_jsonline = open("NX_MSCDIRECT_PROD_20201110.json", "w")
+    # final_outputfile.write("[\n")
     with open("merge_line.txt", "r") as input_merge:
 
         temp_string = ""
@@ -218,14 +217,14 @@ def post_merge():
                 x = '"op":"add", "path": "/products/pid-{}", "attributes": {}'
                 if line != '':
                     # NEED TO ADD SOMETHING TO HANDLE THE LAST ,
-                    final_outputfile.write(
-                        "{ "+x.format(older_key, temp_string)+"},\n")
+                    # final_outputfile.write(
+                    #     "{ "+x.format(older_key, temp_string)+"},\n")
                     final_outputfile_jsonline.write(
                         "{ "+x.format(older_key, temp_string)+"}\n")
 
                 else:
-                    final_outputfile.write(
-                        "{ "+x.format(older_key, temp_string)+"}\n")
+                    # final_outputfile.write(
+                    #     "{ "+x.format(older_key, temp_string)+"}\n")
 
                     final_outputfile_jsonline.write(
                         "{ "+x.format(older_key, temp_string)+"}\n")
@@ -233,7 +232,7 @@ def post_merge():
                 temp_string = val.replace("\n", "")
                 older_key = key
 
-        final_outputfile.write("\n]")
+        # final_outputfile.write("\n]")
 
 
 def main():

@@ -1,6 +1,6 @@
 import time
 import logging
-import sys
+import os
 import json
 import re
 
@@ -13,8 +13,8 @@ logging.basicConfig(filename=LOG_FILENAME, level=logging.ERROR)
 # SOURCE_FILES_PRODUCT = ["IT_Product1.TXT","IT_Product2.TXT","IT_Product3.TXT","IT_Product4.TXT","IT_Product5.TXT","IT_Product6.TXT"]
 
 # JUST FOR TESTING ON SMALLER SET
-# SOURCE_FILES_ATTRIBUTE = ["IT_Alternate.TXT", "IT_Alternate1.TXT"]
-# SOURCE_FILES_PRODUCT = ["IT_Product1.TXT", "IT_Product2.TXT"]
+SOURCE_FILES_ATTRIBUTE = ["IT_Alternate.TXT", "IT_Alternate1.TXT"]
+SOURCE_FILES_PRODUCT = ["IT_Product1.TXT", "IT_Product2.TXT"]
 
 
 def record_creator(file_, output_file):
@@ -24,9 +24,7 @@ def record_creator(file_, output_file):
     crumb_id=''
     rf_string=''
     prod_key = ''
-    try:
-        input_file = open(file_,"r")
-        # with open(file_, "r", errors='replace') as input_file:
+    with open(file_, "r", errors='replace') as input_file:
 
         # IT WILL READ LINE BY LINE
         # HAVEN'T USED READLINE() TO AVAOID LOADING ENTIRE LIST IN RAM TO SAVE MEMORY
@@ -52,10 +50,10 @@ def record_creator(file_, output_file):
                     if rf_string != "":
                             #  Type:jacket,Container Size:4,Composition:widget
                             # split it at , amd :
-                        rf_string_pair_arr = rf_string[:-1].split("^")
+                        rf_string_pair_arr = rf_string[:-1].split(",")
             
                         for pair in rf_string_pair_arr:
-                            rf_key,rf_val = pair.split("$|$")
+                            rf_key,rf_val = pair.split(":")
                             entry_dict[rf_key]=rf_val
 
                         del rf_string_pair_arr
@@ -71,14 +69,14 @@ def record_creator(file_, output_file):
                     rf_string=''
                     entry_dict.clear()
                     
-                    
+                   
                 else:
 
                     record_row_key = line.split("=", 1)[0]  # SPLITS AT FIRST =
                     record_row_value = line.split("=", 1)[1]
 
                     if record_row_key is "" or "_OV" in record_row_key or "_SV" in record_row_key:
-                        
+                       
                         continue  # CASE WHERE THE VARIABLE IS EMPTY  OR CONTAINS _OV OR _SV -> case sensitive seach
 
                     if record_row_key == "part":
@@ -102,19 +100,19 @@ def record_creator(file_, output_file):
 
                         if re.search("^rf[0-9]+_N", record_row_key) != None:
                         
-                            rf_string+=record_row_value+"$|$"
+                            rf_string+=record_row_value+":"
                             continue
-                            
+                           
                         elif re.search("^rf[0-9]+_V", record_row_key) != None:
-                            
-                            rf_string+=record_row_value+"^"
+                           
+                            rf_string+=record_row_value+","
                             continue
-                            
+                          
                         if "cat" in record_row_key: # TO  SAVE MULTIPLE CHECKS
 
                             if re.search("^cat[0-9]+_img", record_row_key) != None or "PrntID" in record_row_key:
                                 continue
-                            
+                          
                             if re.search("^cat[0-9]+_N", record_row_key) != None:
                                 crumb += record_row_value.strip() + "|"
                                 continue
@@ -123,7 +121,7 @@ def record_creator(file_, output_file):
                                 crumb_id += record_row_value.strip() + "|"
                                 continue
                             
-                            
+                           
 
                         if record_row_key in entry_dict:
                             entry_dict[record_row_key] = entry_dict[record_row_key] + \
@@ -135,124 +133,123 @@ def record_creator(file_, output_file):
             except:
                 logging.error("{}:{} -> LINE {} ".format(
                     time.time(), Exception.with_traceback, line))
-        input_file.close()
-    except AttributeError:
-        logging.error("File open issue: {}".format(AttributeError.__cause__))
-    except TypeError:
-        logging.error("Type error-> {}".format(TypeError))
 
-    return
 
 # THIS IS FOR THE ItemRestrictions.txt AND LiveCad4Build.txt
 
 def key_value_item_files(file_name, separator, seconday_key):
 
     record_file_dict = dict()
-    input_file_item = open("./items/"+file_name,"r")
-    output_file_item = open(file_name,"w")
+    with open("./items/"+file_name, "r") as input_file_item:
 
-    # with open("./items/"+file_name, "r") as input_file_item:
+        for line in input_file_item:
+            key, val = line.split(separator)
+            val = val.replace("\n", "")
 
-    for line in input_file_item:
-        key, val = line.split(separator)
-        val = val.replace("\n", "")
+            if key not in record_file_dict:
+                record_file_dict[key] = val
+            else:
+                record_file_dict[key] = record_file_dict[key]+"|"+val
 
-        if key not in record_file_dict:
-            record_file_dict[key] = val.strip()
-        else:
-            record_file_dict[key] = record_file_dict[key]+"|"+val.strip()
+    with open(file_name, "w") as output_file_item:
+        for key, val in record_file_dict.items():
 
-    # with open(file_name, "w") as output_file_item:
-    for key, val in record_file_dict.items():
-
-        if key == "ItemNumber" or key == "part":
-            continue    # HEADING SECTION
-        out_string = key + "\t{\""+seconday_key+"\": \"" + val.strip() + "\"}\n"
-        output_file_item.write(out_string)
-
-    output_file_item.close()
-    input_file_item.close()
+            if key == "ItemNumber" or key == "part":
+                continue    # HEADING SECTION
+            out_string = key + "\t{\""+seconday_key+"\": \"" + val + "\"}\n"
+            output_file_item.write(out_string)
+    # sort_file(file_name)
     return
+
+# SORT THE FILES
+
+
+def sort_file(line_file_name):
+    sort_string = "sort "+line_file_name + \
+        " -o "+line_file_name
+    os.system(sort_string)
+
 
 def aggregated_line_files(files_array, line_file_name):
 
-    aggregated_line_output = open(line_file_name,"w")
+    with open(line_file_name, "w") as output_file:
 
-    for file_ in files_array:
-        print("File started:{}\t{}".format(time.ctime(), file_))
+        for file_ in files_array:
+            print("File started:{}\t{}".format(time.ctime(), file_))
 
-        # file_ = "./items/"+file_
-        record_creator(file_, aggregated_line_output)
+            file_ = "./items/"+file_
+            record_creator(file_, output_file)
 
-    aggregated_line_output.close()
-    return
+    # sort_file(line_file_name)
 
-def nexla_file_generation():
 
+def final_merge():
+    print("Merge and Sort Started in at {}".format(time.ctime()))
+    # os.chdir(WORKING_DIR+"/output/")
+    # os.system(
+        # "cat prod.txt attribute.txt LiveCad4Build.txt ItemRestrictions.txt| sort > merge_line.txt")
+    os.system("sort prod.txt attribute.txt LiveCad4Build.txt ItemRestrictions.txt > merge_line.txt")
+    print("Merge and Sort Completed in at {}\n----------".format(time.ctime()))
+
+
+
+def post_merge():
+    print("Final Record Creation started {}\n".format(time.ctime()))
+
+    # os.chdir(WORKING_DIR+"/output/")
+    # final_outputfile = open("merge_line_unique.json", "w")
     final_outputfile_jsonline = open("NX_MSCDIRECT_PROD_20201110.json", "w")
-    merge_line_input_file = open("merge_line.txt","r")
+    # final_outputfile.write("[\n")
+    with open("merge_line.txt", "r") as input_merge:
 
-    temp_string = ""
-    older_key = ''
+        temp_string = ""
+        older_key = ''
+        for count, line in enumerate(input_merge):
+            key, val = line.split("\t")
+            if count == 0:
+                older_key = key
 
-    for count, line in enumerate(merge_line_input_file):
-        key, val = line.split("\t")
-        if count == 0:
-            older_key = key
-
-        if key == older_key:
-            temp_string = (temp_string+val.replace("\n", "")
-                            ).replace("}{", ", ")
-        else:
-            
-            x = '"op":"add", "path": "/products/pid-{}", "attributes": {}'
-            if line != '':
-                
-                final_outputfile_jsonline.write(
-                    "{ "+x.format(older_key, temp_string)+"}\n")
-
+            if key == older_key:
+                temp_string = (temp_string+val.replace("\n", "")
+                               ).replace("}{", ", ")
             else:
-                
-                final_outputfile_jsonline.write(
-                    "{ "+x.format(older_key, temp_string)+"}\n")
+                # final_outputfile.write("{}\t{}\n".format(older_key,temp_string))
+                x = '"op":"add", "path": "/products/pid-{}", "attributes": {}'
+                if line != '':
+                    # NEED TO ADD SOMETHING TO HANDLE THE LAST ,
+                    # final_outputfile.write(
+                    #     "{ "+x.format(older_key, temp_string)+"},\n")
+                    final_outputfile_jsonline.write(
+                        "{ "+x.format(older_key, temp_string)+"}\n")
 
-            temp_string = val.replace("\n", "")
-            older_key = key
+                else:
+                    # final_outputfile.write(
+                    #     "{ "+x.format(older_key, temp_string)+"}\n")
 
-    # CLOSE THE STREAMS
-    merge_line_input_file.close()
-    final_outputfile_jsonline.close()
-    return
+                    final_outputfile_jsonline.write(
+                        "{ "+x.format(older_key, temp_string)+"}\n")
+
+                temp_string = val.replace("\n", "")
+                older_key = key
+
+        # final_outputfile.write("\n]")
+
 
 def main():
-    operation_type = sys.argv[1]
-    if operation_type == "alternate":
-        print(sys.argv)
-        SOURCE_FILES_ATTRIBUTE= [sys.argv[value] for value in range(2,len(sys.argv))]
-        aggregated_line_files(SOURCE_FILES_ATTRIBUTE, "attribute.txt")
 
-    elif operation_type == "product":
+    print("File Aggregation Started in at {}".format(time.ctime()))
+    aggregated_line_files(SOURCE_FILES_ATTRIBUTE, "attribute.txt")
+    aggregated_line_files(SOURCE_FILES_PRODUCT, "prod.txt")
+    key_value_item_files("ItemRestrictions.txt", "|", "RestrictionGroup")
+    key_value_item_files("LiveCad4Build.txt", ",", "hasLiveCADDrawing")
+    print("File Aggregation Completed in at {}\n----------".format(time.ctime()))
 
-        SOURCE_FILES_PRODUCT= [sys.argv[value] for value in range(2,len(sys.argv))]
-        aggregated_line_files(SOURCE_FILES_PRODUCT, "prod.txt")
+    final_merge()
+    post_merge()
 
-    elif operation_type == "other":
-        key_value_item_files("ItemRestrictions.txt", "|", "RestrictionGroup")
-        key_value_item_files("LiveCad4Build.txt", ",", "hasLiveCADDrawing")
-    
-    elif operation_type == "postprocess":
-        nexla_file_generation()
-
-    # print("File Aggregation Started in at {}".format(time.ctime()))
-    # aggregated_line_files(SOURCE_FILES_ATTRIBUTE, "attribute.txt")
-    # aggregated_line_files(SOURCE_FILES_PRODUCT, "prod.txt")
-
-    # key_value_item_files("ItemRestrictions.txt", "|", "RestrictionGroup")
-    # key_value_item_files("LiveCad4Build.txt", ",", "hasLiveCADDrawing")
-    # print("File Aggregation Completed in at {}\n----------".format(time.ctime()))
 
 if __name__ == "__main__":
     start = time.time()
     main()
     end = time.time()
-    # print("TOTAL EXECUTION:{} sec".format(end-start,))
+    print("TOTAL EXECUTION:{} sec".format(end-start,))

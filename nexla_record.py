@@ -8,15 +8,6 @@ LOG_FILENAME = 'stats.log'
 
 logging.basicConfig(filename=LOG_FILENAME, level=logging.ERROR)
 
-# ACTUAL PAYLOAD
-# SOURCE_FILES_ATTRIBUTE = ["IT_Alternate.TXT","IT_Alternate1.TXT","IT_Alternate2.TXT","IT_Alternate3.TXT","IT_Alternate4.TXT"]
-# SOURCE_FILES_PRODUCT = ["IT_Product1.TXT","IT_Product2.TXT","IT_Product3.TXT","IT_Product4.TXT","IT_Product5.TXT","IT_Product6.TXT"]
-
-# JUST FOR TESTING ON SMALLER SET
-# SOURCE_FILES_ATTRIBUTE = ["IT_Alternate.TXT", "IT_Alternate1.TXT"]
-# SOURCE_FILES_PRODUCT = ["IT_Product1.TXT", "IT_Product2.TXT"]
-
-
 def record_creator(file_, output_file):
     entry_dict = dict()
     specification_key = ''
@@ -225,16 +216,15 @@ def nexla_file_generation():
     return
 
 def main():
+
     operation_type = sys.argv[1]
+    SOURCE_FILES = [sys.argv[value] for value in range(2,len(sys.argv))]
+
     if operation_type == "alternate":
-        print(sys.argv)
-        SOURCE_FILES_ATTRIBUTE= [sys.argv[value] for value in range(2,len(sys.argv))]
-        aggregated_line_files(SOURCE_FILES_ATTRIBUTE, "attribute.txt")
+        aggregated_line_files(SOURCE_FILES, "attribute.txt")
 
     elif operation_type == "product":
-
-        SOURCE_FILES_PRODUCT= [sys.argv[value] for value in range(2,len(sys.argv))]
-        aggregated_line_files(SOURCE_FILES_PRODUCT, "prod.txt")
+        aggregated_line_files(SOURCE_FILES, "prod.txt")
 
     elif operation_type == "other":
         key_value_item_files("ItemRestrictions.txt", "|", "RestrictionGroup")
@@ -243,13 +233,6 @@ def main():
     elif operation_type == "postprocess":
         nexla_file_generation()
 
-    # print("File Aggregation Started in at {}".format(time.ctime()))
-    # aggregated_line_files(SOURCE_FILES_ATTRIBUTE, "attribute.txt")
-    # aggregated_line_files(SOURCE_FILES_PRODUCT, "prod.txt")
-
-    # key_value_item_files("ItemRestrictions.txt", "|", "RestrictionGroup")
-    # key_value_item_files("LiveCad4Build.txt", ",", "hasLiveCADDrawing")
-    # print("File Aggregation Completed in at {}\n----------".format(time.ctime()))
 
 if __name__ == "__main__":
     start = time.time()

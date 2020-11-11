@@ -1,3 +1,4 @@
+#!/bin/bash
 alternate_list=$(ls ./items/IT_A*.TXT)
 product_list=$(ls ./items/IT_P*.TXT)
 other=$(ls ./items/Live*.txt ./items/Item*.txt)

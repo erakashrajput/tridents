@@ -17,11 +17,9 @@ def record_creator(file_, output_file):
     prod_key = ''
     try:
         input_file = open(file_,"r")
-        # with open(file_, "r", errors='replace') as input_file:
-
-        # IT WILL READ LINE BY LINE
-        # HAVEN'T USED READLINE() TO AVAOID LOADING ENTIRE LIST IN RAM TO SAVE MEMORY
-
+        
+        # with open(file_, "r", errors='replace') as input_file: 
+       
         for line in input_file:
             try:
                 line = line.replace("\n", "")
@@ -128,7 +126,7 @@ def record_creator(file_, output_file):
                     time.time(), Exception.with_traceback, line))
         input_file.close()
     except AttributeError:
-        logging.error("File open issue: {}".format(AttributeError.__cause__))
+        logging.error("EXCEPTION ON : {}".format(AttributeError))
     except TypeError:
         logging.error("Type error-> {}".format(TypeError))
 
@@ -225,6 +223,9 @@ def main():
 
     elif operation_type == "product":
         aggregated_line_files(SOURCE_FILES, "prod.txt")
+    elif operation_type == "baseline":
+        aggregated_line_files(SOURCE_FILES, "base.txt")
+
 
     elif operation_type == "other":
         key_value_item_files("ItemRestrictions.txt", "|", "RestrictionGroup")

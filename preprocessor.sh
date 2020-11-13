@@ -7,9 +7,9 @@ python nexla_record.py baseline baseline.txt
 echo "Baseline file is created with encording"
 echo $(date)
 
-python3 nexla_record.py other
+python nexla_record.py other
 echo "LiveCad4Build.txt and ItemRestrictions.txt created "
 sort base.txt LiveCad4Build.txt ItemRestrictions.txt > merge_line.txt
-python3 nexla_record.py postprocess
+python nexla_record.py postprocess
 
 echo "file Nexla file generateion completed"

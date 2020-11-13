@@ -992,9 +992,3 @@ productFamilyCriticalAttributesItemCount=1
 productFamilyImmediate=838fc1f32bdd3c1290c3707b381ab3863a2115d7
 productFamilyImmediateItemCount=1
 REC$$
-
-recordType=Item
-recordSpec=i_00001933
-refNum=1645773
-as400Desc=8 SQ FT CLOTH BONDO FIBERGLASS
-isWebSellable=Yes

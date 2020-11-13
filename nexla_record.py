@@ -3,10 +3,21 @@ import logging
 import sys
 import json
 import re
+from datetime import date
 
-LOG_FILENAME = 'stats.log'
+today = str(date.today())
+LOG_FILENAME = "stats-{}.log".format(today)
 
-logging.basicConfig(filename=LOG_FILENAME, level=logging.ERROR)
+FORMAT = '%(asctime)s %(message)s'
+logging.basicConfig(filename=LOG_FILENAME, level=logging.CRITICAL, format=FORMAT)
+logging.info("testing")
+logging.error("s")
+# error_logger = logging.getLogger("error.err")
+# info_logger = logging.getLogger("info.txt")
+# info_logger.info("info")
+# error_logger.error("as")
+
+
 
 def record_creator(file_, output_file):
     entry_dict = dict()
@@ -20,9 +31,9 @@ def record_creator(file_, output_file):
         
         # with open(file_, "r", errors='replace') as input_file: 
        
-        for line in input_file:
+        for line_count,line in enumerate(input_file):
             try:
-                line = line.replace("\n", "")
+                line = line.replace("\n", "").replace("\r","")
 
                 if line == "":  # EMPTY LINE
                     continue
@@ -79,13 +90,13 @@ def record_creator(file_, output_file):
 
                         # if "_N" in record_row_key and "at":  # KEY
                         if re.search("^at[0-9]+_N", record_row_key) != None:
-                            logging.info("SPECIFICATION ARRAY : {} -> {}".format(record_row_key,record_row_value))
+                            # logging.info("SPECIFICATION ARRAY : {} -> {}".format(record_row_key,record_row_value))
                             specification_key += record_row_value.strip() + "|"
                             continue
 
                         # elif "_V" in record_row_key:  # VALUE
                         elif re.search("^at[0-9]+_V", record_row_key) != None:
-                            logging.info("SPECIFICATION ARRAY : {} -> {}".format(record_row_key,record_row_value))
+                            # logging.info("SPECIFICATION ARRAY : {} -> {}".format(record_row_key,record_row_value))
                             specification_key += record_row_value.strip() + "::"
                             continue
 
@@ -122,8 +133,8 @@ def record_creator(file_, output_file):
                             entry_dict[record_row_key] = record_row_value
 
             except:
-                logging.error("{}:{} -> LINE {} ".format(
-                    time.time(), Exception.with_traceback, line))
+                logging.error("{}:{} -> {} ->LINE {} ".format(
+                    time.time(), Exception.with_traceback,line_count, line))
         input_file.close()
     except AttributeError:
         logging.error("EXCEPTION ON : {}".format(AttributeError))
@@ -177,41 +188,48 @@ def aggregated_line_files(files_array, line_file_name):
     return
 
 def nexla_file_generation():
+    try:
+        final_outputfile_jsonline = open("NX_MSCDIRECT_PROD_{}.jsonl".format(today), "w")
+        merge_line_input_file = open("merge_line.txt","r")
 
-    final_outputfile_jsonline = open("NX_MSCDIRECT_PROD_20201110.json", "w")
-    merge_line_input_file = open("merge_line.txt","r")
+        temp_string = ""
+        older_key = ''
+        val =''
 
-    temp_string = ""
-    older_key = ''
+        for count, line in enumerate(merge_line_input_file):
+            key, val = line.split("\t")
+            if count == 0:
+                older_key = key
 
-    for count, line in enumerate(merge_line_input_file):
-        key, val = line.split("\t")
-        if count == 0:
-            older_key = key
-
-        if key == older_key:
-            temp_string = (temp_string+val.replace("\n", "")
-                            ).replace("}{", ", ")
-        else:
-            
-            x = '"op":"add", "path": "/products/pid-{}", "attributes": {}'
-            if line != '':
-                
-                final_outputfile_jsonline.write(
-                    "{ "+x.format(older_key, temp_string)+"}\n")
-
+            if key == older_key:
+                temp_string = (temp_string+val.replace("\n", "")
+                                ).replace("}{", ", ")
             else:
                 
-                final_outputfile_jsonline.write(
-                    "{ "+x.format(older_key, temp_string)+"}\n")
+                x = '"op":"add", "path": "/products/pid-{}", "values": {}'
+                
+                if line != '':
+                    value_key = "{" +'"attribute":{}'.format(temp_string)+"}"
+                    final_outputfile_jsonline.write(
+                        "{ "+x.format(older_key, value_key)+"}\n")
 
-            temp_string = val.replace("\n", "")
-            older_key = key
+                else:
+                    value_key = "{" +'"attribute":{}'.format(temp_string)+"}"
+                    final_outputfile_jsonline.write(
+                        "{ "+x.format(older_key, value_key)+"}\n")
 
-    # CLOSE THE STREAMS
-    merge_line_input_file.close()
-    final_outputfile_jsonline.close()
-    return
+                temp_string = val.replace("\n", "")
+                older_key = key
+                
+
+        # CLOSE THE STREAMS
+        merge_line_input_file.close()
+        final_outputfile_jsonline.close()
+        return
+    except Exception as e:
+        raise e
+
+    
 
 def main():
 

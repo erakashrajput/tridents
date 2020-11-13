@@ -1,0 +1,4 @@
+1. THIS COMMIT HAS THE WORKING CODE AND CAN BE DEPLOYED
+2. CREATING A BACKUP FILE FOR TODAY IN THIS REPO by nexla_record_NOV14.py - it has attribute and prod added: if required just change the 
+names and call the baseline
+3. Next: I would test some loggers on teh base file

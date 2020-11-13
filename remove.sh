@@ -1,1 +1,1 @@
-rm -rf *.json *.txt *.log
+rm -rf *.json *.txt *.log *.jsonl

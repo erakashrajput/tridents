@@ -41,8 +41,9 @@ def record_creator(file_, output_file):
     try:
         
         input_file = open(file_, "r")
-
+       
         for line_count, line in enumerate(input_file):
+           
             try:
 
                 line = line.replace("\n", "").replace("\r", "") # REMOVEING \n AND\r from line read, IF python3 IS USED ONLY \n NEEDS TO BE REMOVED
@@ -285,5 +286,5 @@ if __name__ == "__main__":
     start = time.time()
     main()
     end = time.time()
-    print("Execution Time:{} sec\n".format(end-start,))
+    print("Execution Time:{} sec\n".format(end-start))
 

@@ -90,8 +90,14 @@ def record_creator(file_, output_file):
                 else:
 
                     # SPLITS AT FIRST '=' 
-                    record_row_key = line.split("=", 1)[0]  
-                    record_row_value = line.split("=", 1)[1]
+                    try:
+                        record_row_key = line.split("=", 1)[0]  
+                        record_row_value = line.split("=", 1)[1]
+
+                    except AttributeError:
+                        print(prod_key)
+                        logging.cretical("{} -> {}".format(record_row_key,record_row_value))
+                    
 
                     if record_row_key is "" or "_OV" in record_row_key or "_SV" in record_row_key:
                         continue  # CASE WHERE THE VARIABLE IS EMPTY  OR CONTAINS _OV OR _SV -> case sensitive seach
@@ -223,7 +229,7 @@ def nexla_file_generation():
 
             else:
 
-                output_json_str_format = '"op":"add", "path": "/products/pid-{}", "values": {}'
+                output_json_str_format = '"op":"add", "path": "/products/{}", "values": {}'
 
                 if line != '':
                     value_key = "{" + '"attribute":{}'.format(temp_string)+"}"
@@ -285,5 +291,6 @@ if __name__ == "__main__":
     start = time.time()
     main()
     end = time.time()
-    print("Execution Time:{} sec\n".format(end-start,))
+    print("Execution Time:{} sec\n".format(end-start))
+
 

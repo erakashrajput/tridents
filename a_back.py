@@ -1,27 +1,10 @@
-__author__ = "DIGAMBAR, AKASH RAJPUT"
-author_email= "digambar.chaudhari@bloomreach.com , akashrajput@bloomreach.com"
+import time
+import sys
+import re
+import json
+import logging
+from datetime import date
 
-'''
-1. NEXLA_RECORD WILL BE CALLED BY preprocessor.sh SCRIPT WITH MULTIPLE OPERATIONS PASSED AS COMMAND LINE ARGUEMENT
-2. THE FINAL OUT WILL BE A NX_MSCDIRECT_PROD_[DATE].jsonl FILE CONTAINING JSON LINE RECORDS
-3. record_creator() : CREATES INDIVIDUAL RECORDS
-4. key_value_other_files(): CREATE RECORDS FOR THE FILES PRESENT IN KEY VALUE PAIR WITH A HEADING
-5. aggregate_line_files(): CALLS THE record_creator() WITH A SUPPORT OF CALLING WITH AN ARRAY OF FILES
-6. nexla_file_generation(): GENERATES THE FINAL NEXLA FILE JSON LINE FILE
-
-'''
-
-try:
-    import time
-    import logging
-    import sys
-    import json
-    import re
-    from datetime import date
-
-except ImportError:
-    raise ImportError
-    
 today = str(date.today())
 LOG_FILENAME = "stats-{}.log".format(today)
 
@@ -206,139 +189,61 @@ def aggregate_line_files(files_array, line_file_name):
     logging.info("Output File: {}".format(line_file_name))
 
 
-# def nexla_file_generation():
-#     try:
-#         final_outputfile_jsonline = open(
-#             "NX_MSCDIRECT_PROD_{}.jsonl".format(today), "w")           
-#         merge_line_input_file = open("merge_line.txt", "r")
-#         temp_string = ""
-#         older_key = ''
-#         record_value = json.loads('{"test":"value"}')
-#         sample_object = dict()
-#         for count, line in enumerate(merge_line_input_file):
-#             key, val = line.split("\t")
-#             record_value = json.loads(val)
-#             if count == 0:
-#                 older_key = key
-#             if key == older_key:
-#                 j1 = json.loads(val)
-#                 sample_object = dict(record_value.items()+j1.items())
-#             else: 
-#                 record_value = json.loads('{"op":"add", "path": "/products/'+older_key+'"}')
-#                 sample_object["price"] = sample_object["sellingPrice"]
-#                 del sample_object["sellingPrice"]
-#                 sample_object["title"] = sample_object["webDesc"]
-#                 del sample_object["webDesc"]
-#                 sample_object["availibility"] = "true"
-#                 sample_object["thumb_image"] = "https://cdn.mscdirect.com/global/images/ProductImages/"+sample_object["img"]+".jpg"
-#                 del sample_object["img"]
-#                 cid = sample_object["crumbs_id"].split("|") 
-#                 cn = sample_object["crumbs"].split("|") 
-#                 crumbs = "[[" 
-#                 for i in range(0,len(cid)):
-#                     if i > 0:
-#                         crumbs= crumbs+","
-
-#                     crumbs = crumbs+'{'+'"id":"'+cid[i]+'","name":"'+cn[i]+'"}'
-#                 crumbs = crumbs+"]]" 
-#                 del sample_object["crumbs"]
-#                 del sample_object["crumbs_id"]  
-#                 value = json.loads("{}")
-#                 value["attributes"] = json.loads(sample_object)
-#                 value["category_paths"] = json.loads(crumbs)                
-#                 record_value["value"] = value
-#                 if line != '':
-#                     final_outputfile_jsonline.write(json.dumps(record_value)+"\n")               
-#                 older_key = key
-
-#         # CLOSE THE STREAMS
-#         merge_line_input_file.close()
-#         final_outputfile_jsonline.close()
-
-#     except IOError as e:
-#         logging.error("Unable to find merge_line.txt")
-#     except Exception as exp:
-#         logging.error("ERROR while creating record")
-
-
-import json
-import logging
-from datetime import date
-
-today = str(date.today())
 def nexla_file_generation():
     try:
         final_outputfile_jsonline = open(
             "NX_MSCDIRECT_PROD_{}.jsonl".format(today), "w")           
         merge_line_input_file = open("merge_line.txt", "r")
-        temp_string = ""
         older_key = ''
         record_value = json.loads('{"test":"value"}')
-        sample_object = dict()
+        record_dict = dict()
         line =''
         older_key = ''
         key = ''
         for count, line in enumerate(merge_line_input_file):
             try:
                 key, val = line.split("\t")
-                     
-                # record_value = json.loads(val)
-                print(record_value)  
-                input("next")
                 if count == 0:
                     older_key = key
-                if key == older_key:
-                    j1 = json.loads(val)
-                    for k,v in j1.items():
-                        sample_object[k] = v
-                    # sample_object = dict(record_value + j1.items())
-                else: 
-                    record_value = json.loads('{"op":"add", "path": "/products/'+older_key+'"}')
 
-                    if "sellingPrice" in sample_object:
-
-                        sample_object["price"] = sample_object["sellingPrice"]
-                        del sample_object["sellingPrice"]
-        
-                    if "webDesc" in sample_object:
-                        sample_object['title'] = sample_object["webDesc"]
-                    # del sample_object["webDesc"]
-            
-                    sample_object["availability"] = "true"
-                    if "img" in sample_object:
-                        sample_object["thumb_image"] = "https://cdn.mscdirect.com/global/images/ProductImages/"+sample_object["img"]+".jpg"
-                        # del sample_object["img"]
+                if older_key != key:
+                    if "sellingPrice" in record_dict:
+                        record_dict["price"] = record_dict["sellingPrice"]
+                        del record_dict["sellingPrice"]
+                    if "webDesc" in record_dict:
+                        record_dict['title'] = record_dict["webDesc"]
+                        del record_dict["webDesc"]
+                    if "img" in record_dict:
+                        record_dict["thumb_image"] = "https://cdn.mscdirect.com/global/images/ProductImages/"+record_dict["img"]+".jpg"
+                        del record_dict["img"]
+                    record_dict["availibility"] = "true"
                     crumbs = ''
-                
-                    if "crumbs_id" in sample_object and "crumbs" in sample_object:
-                        cid = sample_object["crumbs_id"].split("|") 
-                        cn = sample_object["crumbs"].split("|") 
-                        crumbs = "[[" 
+                    if "crumbs_id" in record_dict and "crumbs" in record_dict:
+                        cid = record_dict["crumbs_id"].split("|")
+                        cn = record_dict["crumbs"].split("|")
+                        crumbs = "[["
                         for i in range(0,len(cid)):
                             if i > 0:
                                 crumbs= crumbs+","
-
                             crumbs = crumbs+'{'+'"id":"'+cid[i]+'","name":"'+cn[i]+'"}'
-
-                        crumbs = crumbs+"]]" 
-                        
+                        crumbs = crumbs+"]]"
                     value = json.loads("{}")
-                    value["attributes"] = json.loads(json.dumps(sample_object))
-                    if crumbs!="":
-                        value["category_paths"] = json.loads(crumbs)                
+                    value["attributes"] = json.loads(json.dumps(record_dict))
+                    if crumbs!='':
+                        value["category_paths"] = json.loads(crumbs)
+                    record_value = json.loads('{"op":"add", "path": "/products/'+older_key+'"}')
                     record_value["value"] = value
-                    if line != '':
-                        final_outputfile_jsonline.write(json.dumps(record_value)+"\n")               
+                    final_outputfile_jsonline.write(json.dumps(record_value)+"\n")
                     older_key = key
-                    sample_object.clear()
+                    older_key = key
+                j1 = json.loads(val)
+                for k,v in j1.items():
+                    record_dict[k] = v
             except:
-                print("exping"+ key+"\t"+ older_key)
-                logging.info("Exception {}:  PID: {}".format(line,key))
-
+                logging.info("==>> Line Exception {}:  PID: {}".format(line,key))
         # CLOSE THE STREAMS
         merge_line_input_file.close()
         final_outputfile_jsonline.close()
-
     except IOError as e:
         logging.info("Unable to find merge_line.txt")
     except Exception as exp:

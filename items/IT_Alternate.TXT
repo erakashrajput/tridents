@@ -1,5 +1,5 @@
 part=00001941
-akaMfr=40"1
+akaMfr=401
 akaMfrInfo=1645774|401|||Invalid Aquistion, ? to search||||||
 akaE_MC=325-5467
 akaE_MCInfo=6444247|325-5467|||||||||

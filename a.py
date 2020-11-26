@@ -1,4 +1,17 @@
 
+__author__ = "Akash Rajput"
+author_email= "akashrajput@bloomreach.com"
+
+'''
+1. NEXLA_RECORD WILL BE CALLED BY preprocessor.sh SCRIPT WITH MULTIPLE OPERATIONS PASSED AS COMMAND LINE ARGUEMENT
+2. THE FINAL OUT WILL BE A NX_MSCDIRECT_PROD_[DATE].jsonl FILE CONTAINING JSON LINE RECORDS
+3. record_creator() : CREATES INDIVIDUAL RECORDS
+4. key_value_other_files(): CREATE RECORDS FOR THE FILES PRESENT IN KEY VALUE PAIR WITH A HEADING
+5. aggregate_line_files(): CALLS THE record_creator() WITH A SUPPORT OF CALLING WITH AN ARRAY OF FILES
+6. nexla_file_generation(): GENERATES THE FINAL NEXLA FILE JSON LINE FILE
+
+'''
+
 try:
     import sys
     import time
@@ -8,6 +21,7 @@ try:
     from datetime import date   
 
 except ImportError as identifier:
+    # If any import will fail it would terminate the program. 
     print("Error: Import Error {} \nTerminating the Execution.......".format(identifier))
     sys.exit()
     
@@ -72,7 +86,9 @@ def record_creator(file_, output_file):
                         
                     except AttributeError:         
                         logging.critical("AttributeError => line key:{} :: Value:{}".format(record_row_key ,record_row_value))
-                    
+                    except ValueError:
+                        logging.critical("ValueError => line key:{} :: Value:{}".format(record_row_key ,record_row_value))
+
                     if record_row_key is "" or "_OV" in record_row_key or "_SV" in record_row_key:
                         continue  # CASE WHERE THE VARIABLE IS EMPTY  OR CONTAINS _OV OR _SV -> case sensitive seach
                     if record_row_key == "part":
@@ -130,14 +146,21 @@ def key_value_other_files(file_name, separator, seconday_key):
         input_file_item = open("./items/"+file_name, "r")
         output_file_item = open(file_name, "w")
         logging.info("Process File: {}".format("./items/{}".format(file_name)))
-        for line in input_file_item:
-            key, val = line.split(separator)
-            val = val.replace("\n", "")
 
-            if key not in record_file_dict:
-                record_file_dict[key] = val.strip()
-            else:
-                record_file_dict[key] = record_file_dict[key]+"|"+val.strip()
+        for line in input_file_item:
+            try:
+                key, val = line.split(separator)
+                val = val.replace("\n", "")
+                if key not in record_file_dict:
+                    record_file_dict[key] = val.strip()
+                else:
+                    record_file_dict[key] = record_file_dict[key]+"|"+val.strip()
+
+            except ValueError as identifier:
+                logging.error("Split Issue at {} => {} at {}".format(separator,identifier,line.strip()))
+            except Exception as handler:
+                logging.error("Generic Handler {} => {} at {}".format(file_name,handler,line.strip()))
+  
 
         for key, val in record_file_dict.items():
 
@@ -152,9 +175,10 @@ def key_value_other_files(file_name, separator, seconday_key):
         input_file_item.close()
         
         logging.info("Output File: {}".format(file_name))
-    except Exception as e:
-        logging.error(e.args.items())
-    
+    except IOError as e:
+        logging.error("{}".format(e))
+    except Exception as global_handler:
+        logging.error("Global Handler (key_value_other_files) => {}".format(global_handler))
 
 def aggregate_line_files(files_array, line_file_name):
 
@@ -183,6 +207,7 @@ def nexla_file_generation():
             try:
                 line = line.replace("\n","")
                 key, val = line.split("\t")
+                
                
                 if count == 0:
                     older_key = key
@@ -218,12 +243,8 @@ def nexla_file_generation():
                         crumbs_json = json.loads(crumbs) 
                         record_dict["category_paths"] = crumbs_json
                     value["attributes"] = json.loads(json.dumps(record_dict))
-                    '''
-                    1. if due to some reason, we have exception at count = 0, that record will be skipped, but when the next time
-                    it will come in this if condition , the older_value will be = '', hence empty record will be writted
-                    Example output: {"path": "/products/", "value": {"attributes": {"availability": true}}, "op": "add"}
-                    so solve it we can add a check like this
-
+                
+                    # IF WE HAVE EXCEPTION ON THE FIRST ENTRY
                     if  older_key != '':
                         record_value = json.loads('{"op":"add", "path": "/products/'+older_key+'"}')
                         record_value["value"] = value
@@ -233,22 +254,23 @@ def nexla_file_generation():
                     older_key = key
                     record_dict.clear()
 
-                    '''                     
-                    record_value = json.loads('{"op":"add", "path": "/products/'+older_key+'"}')
-                    record_value["value"] = value
-                    final_outputfile_jsonline.write(json.dumps(record_value)+"\n")
-                    older_key = key
-                    record_dict.clear()
+                    #  COMMENTED THIS TO HANDLE THE CASE         
+                    # record_value = json.loads('{"op":"add", "path": "/products/'+older_key+'"}')
+                    # record_value["value"] = value
+                    # final_outputfile_jsonline.write(json.dumps(record_value)+"\n")
+                    # older_key = key
+                    # record_dict.clear()
 
                 j1 = json.loads(val)
                 for k,v in j1.items():
                     if v != '':
                         record_dict[k] = v
+                        
             except KeyError as key_error:
                 # key_error =>  key which errored out 
-                logging.error("KeyError::{} ==>> Line Exception {}".format(key_error,line))
+                logging.error("KeyError::{} ==> Line Exception {}".format(key_error,line))
             except ValueError as value_error:
-                logging.error("ValueError::{} ==>> Line Exception {}".format(value_error,line))
+                logging.error("ValueError::{} ==> Line Exception {}".format(value_error,line))
             except Exception as general:
                 logging.error("Global Excepton Handler:{} => Line:: {}".format(general,line))
 
@@ -295,6 +317,7 @@ def main():
         logging.error("Incorrect operation_type IN THE REQUEST")
 
 if __name__ == "__main__":
+    
     start = time.time()
     main()
     end = time.time()

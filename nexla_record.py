@@ -191,40 +191,57 @@ def aggregate_line_files(files_array, line_file_name):
     aggregated_line_output.close()
     logging.info("Output File: {}".format(line_file_name))
 
+def nexla_record_format_creator(older_key,record_dict):
+    value = json.loads("{}")
+    value["attributes"] = json.loads(json.dumps(record_dict))
+    record_value = json.loads('{"op":"add", "path": "/products/'+older_key+'"}')
+    record_value["value"] = value
+    return json.dumps(record_value)+"\n" 
 
 def nexla_file_generation():
+    
     try:
+        
         final_outputfile_jsonline = open(
             "NX_MSCDIRECT_PROD_{}.jsonl".format(today), "w")           
         merge_line_input_file = open("merge_line.txt", "r")
         older_key = ''
-        record_value = json.loads('{"test":"value"}')
-        record_dict = dict()
         line =''
         older_key = ''
         key = ''
+        record_dict = dict()
+        
+        logging.info("Nexla File Generation started")
+
         for count, line in enumerate(merge_line_input_file):
             try:
-                line = line.replace("\n","")
+                line = line.replace("\n","")        
                 key, val = line.split("\t")
-                
+                j1 = json.loads(val)
                
                 if count == 0:
                     older_key = key
-    
-                if older_key != key:
-                    if "sellingPrice" in record_dict:
-                        record_dict["price"] = float(record_dict["sellingPrice"])
-                        del record_dict["sellingPrice"]
+
+                if older_key == key:
+                    # create the records
+                    for k,v in j1.items():
+                        if v != '':
+                            record_dict[k] = v
+  
+                else:
+                    
+                    if "sellingPrice" in record_dict:                
+                        record_dict["price"] = float(record_dict.pop("sellingPrice"))
+                    
                     if "brandName" in record_dict:
-                        record_dict['brand'] = record_dict["brandName"]
-                        del record_dict["brandName"]
+                        record_dict['brand'] = record_dict.pop("brandName")
+                       
                     if "webDesc" in record_dict:
-                        record_dict['title'] = record_dict["webDesc"]
-                        del record_dict["webDesc"]
+                        record_dict['title'] = record_dict.pop("webDesc")
+
                     if "img" in record_dict:
-                        record_dict["thumb_image"] = "https://cdn.mscdirect.com/global/images/ProductImages/"+record_dict["img"]+".jpg"
-                        del record_dict["img"]
+                        record_dict["thumb_image"] = "https://cdn.mscdirect.com/global/images/ProductImages/"+record_dict.pop("img")+".jpg"
+                       
                     record_dict["availability"] = bool("true")
                     crumbs = ''
                     if "crumbs_id" in record_dict and "crumbs" in record_dict:
@@ -236,47 +253,40 @@ def nexla_file_generation():
                                 crumbs= crumbs+","
                             crumbs = crumbs+'{'+'"id":"'+cid[i]+'","name":"'+cn[i]+'"}'
                         crumbs = crumbs+"]]"
-                        del record_dict["crumbs"]
-                        del record_dict["crumbs_id"]
-                    value = json.loads("{}")
+                        
+                        record_dict.pop("crumbs")
+                        record_dict.pop("crumbs_id")
+    
                     if crumbs!='':
                         crumbs_json = json.loads(crumbs) 
                         record_dict["category_paths"] = crumbs_json
-                    value["attributes"] = json.loads(json.dumps(record_dict))
-                
+                                                       
                     # IF WE HAVE EXCEPTION ON THE FIRST ENTRY
                     if  older_key != '':
-                        record_value = json.loads('{"op":"add", "path": "/products/'+older_key+'"}')
-                        record_value["value"] = value
-                        final_outputfile_jsonline.write(json.dumps(record_value)+"\n")
-                    else:
-                        pass
+                        final_outputfile_jsonline.write(nexla_record_format_creator(older_key,record_dict))
+                                     
                     older_key = key
                     record_dict.clear()
 
-                    #  COMMENTED THIS TO HANDLE THE CASE         
-                    # record_value = json.loads('{"op":"add", "path": "/products/'+older_key+'"}')
-                    # record_value["value"] = value
-                    # final_outputfile_jsonline.write(json.dumps(record_value)+"\n")
-                    # older_key = key
-                    # record_dict.clear()
-
-                j1 = json.loads(val)
-                for k,v in j1.items():
-                    if v != '':
-                        record_dict[k] = v
+                    for k,v in j1.items():
+                        if v != '':
+                            record_dict[k] = v
+                         
                         
             except KeyError as key_error:
-                # key_error =>  key which errored out 
                 logging.error("KeyError::{} ==> Line Exception {}".format(key_error,line))
             except ValueError as value_error:
                 logging.error("ValueError::{} ==> Line Exception {}".format(value_error,line))
             except Exception as general:
                 logging.error("Global Excepton Handler:{} => Line:: {}".format(general,line))
 
+        # TO PRINT THE LAST PRODUCT ENTRY IN THE RECORD_DICT IN THE FILE 
+        final_outputfile_jsonline.write(nexla_record_format_creator(older_key,record_dict))        
+
         # CLOSE THE STREAMS
         merge_line_input_file.close()
         final_outputfile_jsonline.close()
+        logging.info("Nexla File Generation Completed")
     except IOError as io_error:
         logging.critical("IOError => Unable to find merge_line.txt")
     except Exception as exp:

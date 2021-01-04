@@ -1,1 +1,8 @@
-1. This repo is to rest the logging and exception handling
+nexla_record_2020.py - correct file working as of 2020
+
+nexla_record_2020.py - we would do the following changes here
+MSCD 478
+1. add path
+2. encoding null character
+3 lookAhead
+

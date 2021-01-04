@@ -1,4 +1,3 @@
-
 __author__ = "Akash Rajput"
 author_email= "akashrajput@bloomreach.com"
 
@@ -192,6 +191,8 @@ def aggregate_line_files(files_array, line_file_name):
     logging.info("Output File: {}".format(line_file_name))
 
 def nexla_record_format_creator(older_key,record_dict):
+   
+    record_dict["availability"] = bool("true")
     value = json.loads("{}")
     value["attributes"] = json.loads(json.dumps(record_dict))
     record_value = json.loads('{"op":"add", "path": "/products/'+older_key+'"}')
@@ -210,6 +211,16 @@ def nexla_file_generation():
         older_key = ''
         key = ''
         record_dict = dict()
+        # ARRAY TO DROP FIELDS
+        try:
+            dropfield_file = open("dropfields.csv","r")
+            drop_fields_in_processing=[]
+            drop_fields_in_processing = str(dropfield_file.read()).split(",")
+        except IOError as identifier:
+            logging.warning("dropfields file missing")
+            drop_fields_in_processing=[]
+
+        
         
         logging.info("Nexla File Generation started")
 
@@ -226,6 +237,18 @@ def nexla_file_generation():
                     # create the records
                     for k,v in j1.items():
                         if v != '':
+
+                            if k in drop_fields_in_processing:
+                                continue
+                           
+                            if "|" in v and k!='crumbs' and k!='crumbs_id' and k!='specification':
+                                split_arr_v = v.encode('utf8').split("|")                       
+                                record_dict[k] = list(filter(lambda x: (x!='' and x!=' ' ) , split_arr_v))
+                                continue
+                            if k=='specification':
+                                split_arr_v = v.encode('utf8').split("::")
+                                record_dict[k] = list(filter(lambda x: (x!='' and x!=' ' ) , split_arr_v))
+                                continue
                             record_dict[k] = v
   
                 else:
@@ -242,7 +265,7 @@ def nexla_file_generation():
                     if "img" in record_dict:
                         record_dict["thumb_image"] = "https://cdn.mscdirect.com/global/images/ProductImages/"+record_dict.pop("img")+".jpg"
                        
-                    record_dict["availability"] = bool("true")
+                    # record_dict["availability"] = bool("true")
                     crumbs = ''
                     if "crumbs_id" in record_dict and "crumbs" in record_dict:
                         cid = record_dict["crumbs_id"].split("|")
@@ -263,25 +286,48 @@ def nexla_file_generation():
                                                        
                     # IF WE HAVE EXCEPTION ON THE FIRST ENTRY
                     if  older_key != '':
-                        final_outputfile_jsonline.write(nexla_record_format_creator(older_key,record_dict))
+                        if 'RestrictionGroup' in record_dict.keys() and len(record_dict)==1:
+                            pass
+                        else:
+                            final_outputfile_jsonline.write(nexla_record_format_creator(older_key,record_dict))
                                      
                     older_key = key
                     record_dict.clear()
 
                     for k,v in j1.items():
                         if v != '':
+                            if k in drop_fields_in_processing:
+                                continue
+                            
+                            if "|" in v and k!='crumbs' and k!='crumbs_id' and k!='specification':
+            
+                                split_arr_v = v.encode('utf8').split("|")   
+                                record_dict[k] = list(filter(lambda x: (x!='' and x!=' ' ) , split_arr_v))
+                                continue
+                            if k=='specification':
+                                split_arr_v = v.encode('utf8').split("::")
+                                record_dict[k] = list(filter(lambda x: (x!='' and x!=' ' ) , split_arr_v))
+                                continue
+                            
                             record_dict[k] = v
                          
                         
             except KeyError as key_error:
                 logging.error("KeyError::{} ==> Line Exception {}".format(key_error,line))
-            except ValueError as value_error:
-                logging.error("ValueError::{} ==> Line Exception {}".format(value_error,line))
+                
+            except UnicodeEncodeError as encoding_err:
+                exc_tb = sys.exc_info()[2]
+                logging.error("UnicodeEncodeError at Code LN = {} ::{} ==> Line Exception {}".format(exc_tb.tb_lineno,encoding_err,line))
+            except ValueError as value_err:
+                logging.error("ValueError::{} ==> Line Exception {}".format(value_err,line))
             except Exception as general:
                 logging.error("Global Excepton Handler:{} => Line:: {}".format(general,line))
 
-        # TO PRINT THE LAST PRODUCT ENTRY IN THE RECORD_DICT IN THE FILE 
-        final_outputfile_jsonline.write(nexla_record_format_creator(older_key,record_dict))        
+        # TO PRINT THE LAST PRODUCT ENTRY IN THE RECORD_DICT IN THE FIL
+        if 'RestrictionGroup' in record_dict.keys() and len(record_dict)==1:
+            pass
+        else:
+            final_outputfile_jsonline.write(nexla_record_format_creator(older_key,record_dict))        
 
         # CLOSE THE STREAMS
         merge_line_input_file.close()
